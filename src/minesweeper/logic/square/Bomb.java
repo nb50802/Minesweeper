@@ -10,7 +10,7 @@ public class Bomb extends Square
 
     public String toString()
     {
-        return "\u001B[31m[*]\u001B[0m";
+        return (this.isDug() ? "\u001B[35m" : "\u001B[31m") + "[*]" + "\u001B[0m";
     }
 
 }

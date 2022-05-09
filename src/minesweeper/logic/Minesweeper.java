@@ -26,6 +26,26 @@ public class Minesweeper implements Serializable
         this.flags = difficulty.bombs();
     }
 
+    public Square[][] getBoard()
+    {
+        return this.board;
+    }
+
+    public Difficulty getDifficulty()
+    {
+        return this.difficulty;
+    }
+
+    public int getFlags()
+    {
+        return this.flags;
+    }
+
+    public GameState getGameState()
+    {
+        return this.gameState;
+    }
+
     public void populateBoard(int xSafe, int ySafe)
     {
         IntStream.range(0, this.difficulty.y())
@@ -74,27 +94,24 @@ public class Minesweeper implements Serializable
         {
             this.populateBoard(x, y);
             this.gameState = GameState.DIRTY;
-            this.dig(x, y);
+        }
+
+        Square square = this.board[y][x];
+        square.dig();
+
+        if(square.isBomb())
+        {
+            this.gameState = GameState.LOST;
+
+            //...
         }
         else
         {
-            Square square = this.board[y][x];
-            square.dig();
+            Land land = (Land) square;
 
-            if(square.isBomb())
+            if(land.getNearbyBombs() == 0)
             {
-                this.gameState = GameState.LOST;
-
-                //...
-            }
-            else
-            {
-                Land land = (Land) square;
-
-                if(land.getNearbyBombs() == 0)
-                {
-                    this.uncoverSurroundings(x, y);
-                }
+                this.uncoverSurroundings(x, y);
             }
         }
     }

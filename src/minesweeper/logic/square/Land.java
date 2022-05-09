@@ -22,7 +22,7 @@ public class Land extends Square
 
     public String toString()
     {
-        return "[" + this.nearbyBombs + "]";
+        return (this.isDug() ? "\u001B[37m" : "\u001B[32m") + "[" + this.nearbyBombs + "]" + "\u001B[0m";
     }
 
 }
