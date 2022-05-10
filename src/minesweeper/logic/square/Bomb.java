@@ -1,24 +1,20 @@
 package minesweeper.logic.square;
 
-import javafx.scene.control.Label;
+import minesweeper.logic.Theme;
 
 public class Bomb extends Square
 {
-
-    public Bomb(int x, int y)
-    {
-        super(x, y);
-    }
 
     public boolean isBomb()
     {
         return true;
     }
 
-    public void dig()
+    public void dig(int x, int y)
     {
-        super.dig();
-        this.label.setText("*");
+        super.dig(x, y);
+        this.setText("⚫");
+        this.setTextFill(Theme.BOMB);
     }
 
     public String toString()

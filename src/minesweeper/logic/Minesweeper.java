@@ -1,17 +1,21 @@
 package minesweeper.logic;
 
+import javafx.scene.Node;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.GridPane;
+import javafx.scene.text.Text;
 import minesweeper.logic.square.Bomb;
 import minesweeper.logic.square.Land;
 import minesweeper.logic.square.Square;
 
 import java.io.Serializable;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Random;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class Minesweeper implements Serializable
+public class Minesweeper extends GridPane implements Serializable
 {
 
     private final Square[][] board;
@@ -24,6 +28,9 @@ public class Minesweeper implements Serializable
         this.board = new Square[difficulty.y()][difficulty.x()];
         this.difficulty = difficulty;
         this.flags = difficulty.bombs();
+        this.addEventFilter(MouseEvent.MOUSE_PRESSED, this::mousePressed);
+        this.populateLand();
+        System.out.println(this);
     }
 
     public Square[][] getBoard()
@@ -46,21 +53,31 @@ public class Minesweeper implements Serializable
         return this.gameState;
     }
 
-    public void populateBoard(int xSafe, int ySafe)
+    private void populateLand()
     {
         IntStream.range(0, this.difficulty.y())
                 .forEach(y -> IntStream.range(0, this.difficulty.x())
-                        .forEach(x -> this.board[y][x] = new Land()));
+                        .forEach(x ->
+                        {
+                            this.board[y][x] = new Land();
+                            this.add(this.board[y][x], x, y);
+                            this.board[y][x].setColor((x + y) % 2 == 0 ? Theme.FIELD_DARK : Theme.FIELD_LIGHT);
+                        }));
+    }
 
+    private void populateBoard(int xSafe, int ySafe)
+    {
         var random = new Random();
 
         for(int i = 0; i < this.difficulty.bombs();)
         {
             int x = random.nextInt(this.difficulty.x()), y = random.nextInt(this.difficulty.y());
 
-            if(!this.board[y][x].isBomb() && x != xSafe && y != ySafe)
+            if(!this.board[y][x].isBomb() && Math.abs(xSafe - x) > 1 && Math.abs(ySafe - y) > 1)
             {
                 this.board[y][x] = new Bomb();
+                this.add(this.board[y][x], x, y);
+                this.board[y][x].setColor((x + y) % 2 == 0 ? Theme.FIELD_DARK : Theme.FIELD_LIGHT);
                 this.getNeighbors(x, y).values().stream()
                         .filter(Predicate.not(Square::isBomb))
                         .map(Land.class::cast)
@@ -72,9 +89,15 @@ public class Minesweeper implements Serializable
 
     public void flag(int x, int y)
     {
+        if(this.gameState == GameState.CLEAN)
+        {
+            this.populateBoard(x, y);
+            this.gameState = GameState.DIRTY;
+        }
+
         Square square = this.board[y][x];
 
-        if(this.flags > 0 || square.isFlagged())
+        if(!square.isDug() && (this.flags > 0 || square.isFlagged()))
         {
             this.flags += square.isFlagged() ? 1 : -1;
             square.toggleFlag();
@@ -82,7 +105,7 @@ public class Minesweeper implements Serializable
             if(Arrays.stream(this.board).flatMap(Arrays::stream).filter(Square::isBomb).allMatch(Square::isFlagged))
             {
                 this.gameState = GameState.WON;
-
+                System.out.println("won");
                 //...
             }
         }
@@ -97,21 +120,25 @@ public class Minesweeper implements Serializable
         }
 
         Square square = this.board[y][x];
-        square.dig();
 
-        if(square.isBomb())
+        if(!square.isFlagged())
         {
-            this.gameState = GameState.LOST;
+            square.dig(x, y);
 
-            //...
-        }
-        else
-        {
-            Land land = (Land) square;
-
-            if(land.getNearbyBombs() == 0)
+            if(square.isBomb())
             {
-                this.uncoverSurroundings(x, y);
+                this.gameState = GameState.LOST;
+                System.out.println("lost");
+                //...
+            }
+            else
+            {
+                Land land = (Land) square;
+
+                if(land.getNearbyBombs() == 0)
+                {
+                    this.uncoverSurroundings(x, y);
+                }
             }
         }
     }
@@ -124,7 +151,7 @@ public class Minesweeper implements Serializable
 
             if(!land.isDug())
             {
-                land.dig();
+                land.dig(pos[0], pos[1]);
 
                 if(land.isFlagged())
                 {
@@ -161,6 +188,33 @@ public class Minesweeper implements Serializable
         }
 
         return neighbors;
+    }
+
+    public void mousePressed(MouseEvent event)
+    {
+        Node clickedNode = event.getPickResult().getIntersectedNode();
+
+        if(clickedNode instanceof Text)
+        {
+            clickedNode = clickedNode.getParent();
+        }
+
+        if(clickedNode != this)
+        {
+            int x = GridPane.getColumnIndex(clickedNode);
+            int y = GridPane.getRowIndex(clickedNode);
+
+            if(event.isPrimaryButtonDown())
+            {
+                this.dig(x, y);
+            }
+            else if(event.isSecondaryButtonDown())
+            {
+                this.flag(x, y);
+            }
+        }
+
+        System.out.println(this);
     }
 
     public String toString()

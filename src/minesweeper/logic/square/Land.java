@@ -1,27 +1,26 @@
 package minesweeper.logic.square;
 
-import javafx.scene.control.Label;
-import javafx.scene.layout.Background;
+import minesweeper.logic.Theme;
 
 public class Land extends Square
 {
 
     private int nearbyBombs;
 
-    public Land(int x, int y)
-    {
-        super(x, y);
-    }
-
     public boolean isBomb()
     {
         return false;
     }
 
-    public void dig()
+    public void dig(int x, int y)
     {
-        super.dig();
-        this.label.setText(String.valueOf(this.nearbyBombs));
+        super.dig(x, y);
+
+        if(this.nearbyBombs != 0)
+        {
+            this.setText(String.valueOf(this.nearbyBombs));
+            this.setTextFill(this.nearbyBombs >= Theme.NEARBY.length ? Theme.NEARBY[Theme.NEARBY.length - 1] : Theme.NEARBY[this.nearbyBombs - 1]);
+        }
     }
 
     public int getNearbyBombs()
