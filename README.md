@@ -14,4 +14,4 @@ The game Minesweeper recreated in Java.
 
 ## Have fun!
 
-<img src="https://user-images.githubusercontent.com/70917695/176991854-8c72fde6-df34-45a3-9308-36de9d3e47b1.png" width="350">
+<img src="https://user-images.githubusercontent.com/70917695/176991854-8c72fde6-df34-45a3-9308-36de9d3e47b1.png" width="400">
